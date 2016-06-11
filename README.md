@@ -1,11 +1,11 @@
 # AOA audio tone indicator from EFIS serial data
 Audio tone indicator of AOA from a aircraft EFIS serial port. Using a Ardunino Due connected to a Dynon Efis D10, D100 or D180 via the serial port.
 
-Normally AOA is presented in a visual form or green,yellow,red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone so the pilot does not have to look down at the panel to know how close to a stall they are.
+Normally AOA is presented in a visual form of green,yellow,red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone so the pilot does not have to look at the instrument panel.
 
 # Requirements
  - Dynon EFIS D10, D100, or D180
- - Arduino Due.  Can be purchased at many different online stores. 
+ - Arduino Due.  Can be purchased at many different online stores like [amazon](https://www.amazon.com/OSOYOO-Compatible-Shield-Module-Arduino/dp/B010SCWGE2/) or  [ebay](http://www.ebay.com/sch/items/?_nkw=arduino+due) 
  - [Ardino IDE](https://www.arduino.cc/en/Main/Software) for mac, linux , or windows. This is used to program your arduino board. And a [beginers guide to Arduino Due](https://www.arduino.cc/en/Guide/ArduinoDue) is a good idea.  You will need to [install Arduino SAM Board Core](https://www.arduino.cc/en/Guide/Cores) in order to build for a Due board.
  - You will need to know [how to install arduino libraries](https://www.arduino.cc/en/Guide/Libraries). The following libraries are required.
    * *DueTimer*
@@ -26,7 +26,7 @@ Normally AOA is presented in a visual form or green,yellow,red to indicate how c
 ![schematic](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/AOA_Due_schem.png?raw=true)
 
 # Notes
-The audio out is designed to go into a audio panel of your aircraft.
+The audio out is designed to plug into the audio panel of your aircraft.
 
 It may be a good idea to hook a switch inline with the serial RX or audio out of the board.  This could be useful to turn the device on/off when you don't want to hear a annoying beep in your ear.
 # Todo
