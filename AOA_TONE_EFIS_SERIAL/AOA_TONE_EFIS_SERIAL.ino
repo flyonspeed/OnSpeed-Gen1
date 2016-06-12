@@ -39,7 +39,7 @@
 
 // Min airspeed in knots before the audio tone is turned on
 // This is useful because if your on the ground you don't need a beeping in your ear.
-#define MUTE_AUDIO_UNDER_IAS  35
+#define MUTE_AUDIO_UNDER_IAS  25
 
 // dynon expected string length
 #define DYNON_SERIAL_LEN      53
@@ -53,7 +53,7 @@
 
 #define TONE_PIN          2     // TIOA0
 #define PIN_LED1          13    // internal LED for showing AOA status.
-#define PIN_LED2          54    // external LED for showing serial input.
+#define PIN_LED2          54    // aka A0. external LED for showing serial input.
 #define TONE1600hz        1600 
 #define TONE400hz         400
 #define PULSE_TONE        1
@@ -148,6 +148,8 @@ void checkAOA_Dynon() {
   // show audio muted and debug info.
   sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
   Serial.println(tempBuf);
+  toneMode = TONE_OFF;
+  return;
 #endif
   }
   
