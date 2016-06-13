@@ -39,7 +39,7 @@
 
 // Min airspeed in knots before the audio tone is turned on
 // This is useful because if your on the ground you don't need a beeping in your ear.
-#define MUTE_AUDIO_UNDER_IAS  25
+#define MUTE_AUDIO_UNDER_IAS  5
 
 // dynon expected string length
 #define DYNON_SERIAL_LEN      53
@@ -49,7 +49,6 @@
 #define HIGH_TONE_PPS_MIN     1.5
 #define LOW_TONE_PPS_MAX      8.5
 #define LOW_TONE_PPS_MIN      1.5
-
 
 #define TONE_PIN          2     // TIOA0
 #define PIN_LED1          13    // internal LED for showing AOA status.
@@ -68,6 +67,7 @@ float pps = 0;                        // store current PPS of tone (used for deb
 int liveAOA;                          // realtime AOA value.
 int AOA = 0;                          // avaraged AOA value is stored here.
 int lastAOA = 0;                      // save last AOA value here.
+unsigned int ALT = 0;                 // hold ALT (only used for debuging)
 int ASI = 0;                          // live Air Speed Indicated
 unsigned int cyclesWOSerialData = 0;  // keep track if not serial data is recieved.
 GaussianAverage myAverageAOA = GaussianAverage(AOA_HISTORY_MAX);
@@ -90,15 +90,36 @@ void setup() {
   pinMode(PIN_LED1, OUTPUT);
   pinMode(PIN_LED2, OUTPUT);
 
+  Serial.begin(115200);   //Init hardware serial port (ouput to computer for debug)
+  Serial3.begin(115200);  //Init hardware serial port (input from EFIS)
+
+  configureToneTimer();   //setup timer used for tone
+
+  setFrequencytone(400);
+  delay(200);
+  setFrequencytone(600);
+  delay(200);
+  setFrequencytone(800);
+  delay(200);
+  setFrequencytone(1000);
+  delay(200);
+  setFrequencytone(1200);
+  delay(200);
+  setFrequencytone(1000);
+  delay(200);
+  setFrequencytone(800);
+  delay(200);
+  setFrequencytone(600);
+  delay(200);
+  setFrequencytone(400);
+  delay(200);
+  setFrequencytone(0);
+  
   // timer callback is used for turning tone on/off.
   Timer4.attachInterrupt(tonePlayHandler);
   Timer4.setFrequency(FREQ_OF_FUNCTION);  // set how often we should run the callback function.
   Timer4.start();
 
-  Serial.begin(115200);   //Init hardware serial port (ouput to computer for debug)
-  Serial3.begin(115200);  //Init hardware serial port (input from EFIS)
-
-  configureToneTimer();   //setup timer used for tone
 }
 
 // We use our own counter for how often we should pause between tones (pulses per sec PPS)
@@ -195,7 +216,7 @@ void checkAOA_Dynon() {
   lastAOA = AOA;
 #ifdef SHOW_SERIAL_DEBUG    
   // show serial debug info.
-  sprintf(tempBuf, "AOA:%i Live:%i ASI:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI,pps, cycleCounterResetAt);
+  sprintf(tempBuf, "AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
   Serial.println(tempBuf);
 #endif
 }
@@ -237,6 +258,14 @@ void loop() {
           tempBuf[2] = input[22]; //
           tempBuf[3] = '\0'; //
           ASI = strtol(tempBuf, NULL, 10) * 1.943; //convert to int (and from m/s to knots)
+
+          // get ALT (4 digits) in meters
+          tempBuf[0] = input[25]; //
+          tempBuf[1] = input[26]; //
+          tempBuf[2] = input[27]; //
+          tempBuf[3] = input[28]; //
+          tempBuf[4] = '\0'; //
+          ALT = (strtol(tempBuf, NULL, 10) * 0.328) * 10; //convert to long (and from meters to feet)
 
           // check how often we want to sample the serial data.
           LedCountDown --;
