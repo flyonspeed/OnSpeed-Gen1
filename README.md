@@ -4,15 +4,27 @@ Audio tone indicator of AOA from a aircraft EFIS serial port. Using a Ardunino D
 Normally AOA is presented in a visual form of green,yellow,red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone so the pilot does not have to look at the instrument panel.
 
 USE AT YOUR OWN RISK.  THIS IS FOR EXPERIMENTAL AIRCRAFT ONLY. 
+
+# Background
+
+Adopted from USAF F-4 System.  AOA tone system developed to assist pilot with aircraft handling during maneuvering flight and approach/landing operations.  
+
+# What does it do?
+
+There are 2 different tone frequencies and multiple pulses per second (PPS) heard.   The diagram below shows what tone and pulses are heard at different AOA levels.
+
+![AOA chart](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/chart.png?raw=true)
+
+
 # Requirements
  - Dynon EFIS D10, D100, or D180
  - Arduino Due.  Can be purchased at many different online stores like [amazon](https://www.amazon.com/OSOYOO-Compatible-Shield-Module-Arduino/dp/B010SCWGE2/) or  [ebay](http://www.ebay.com/sch/items/?_nkw=arduino+due) 
    * The due board has 2 usb ports.  Use the "programming" usb port plugged into your computer to program the board.  When using in a aircraft you can power the board with either usb port.
- - [Ardino IDE](https://www.arduino.cc/en/Main/Software) for mac, linux , or windows. This is used to program your arduino board. And a [beginers guide to Arduino Due](https://www.arduino.cc/en/Guide/ArduinoDue) is a good idea.  You will need to [install Arduino SAM Board Core](https://www.arduino.cc/en/Guide/Cores) in order to build for a Due board.
+ - [Ardino IDE](https://www.arduino.cc/en/Main/Software) for mac, linux , or windows. This is used to program your arduino board. And a [beginers guide to Arduino Due](https://www.arduino.cc/en/Guide/ArduinoDue) is a good idea.  You will need to [install Arduino SAM Board Core](https://www.arduino.cc/en/Guide/Cores) in order to build for a Due board. "Arduino SAM Boards (32-bits ARM Cortex-M3)" ver 1.6.8 is what was used during development.
  - You will need to know [how to install arduino libraries](https://www.arduino.cc/en/Guide/Libraries). The following libraries are required.
-   * *DueTimer*
-   * *Gaussian*
-   * *LinkedList*
+   * *DueTimer* (version 1.4 used)
+   * *Gaussian* (version 1.0.7 used)
+   * *LinkedList* (version 1.0.7 used)
  - And few other things to finish this project.
    * 0.22µF Ceramic Capacitor
    * 0.02µF Ceramic Capacitor
