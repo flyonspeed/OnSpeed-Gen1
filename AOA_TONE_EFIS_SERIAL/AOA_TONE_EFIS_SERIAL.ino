@@ -41,23 +41,32 @@
 // This is useful because if your on the ground you don't need a beeping in your ear.
 #define MUTE_AUDIO_UNDER_IAS  5
 
-// dynon expected string length
-#define DYNON_SERIAL_LEN      53
+// Expected serial string lengths
+#define DYNON_SERIAL_LEN              53
+#define DYNON_SKYVIEW_SERIAL_LEN      74
 
-// Tone Pulse Per Sec (PPS) for high and low tones.
-#define HIGH_TONE_PPS_MAX     6.5
-#define HIGH_TONE_PPS_MIN     1.5
+// AOA values & Tone Pulse Per Sec (PPS) 
+#define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
+#define HIGH_TONE_AOA_STALL   90      // % (and above) where stall happens.
+#define HIGH_TONE_AOA_START   70      // % (and above) where high tone starts
+#define HIGH_TONE_PPS_MAX     6.5     // 6.5   
+#define HIGH_TONE_PPS_MIN     1.5     // 1.5
+#define HIGH_TONE_HZ          1600    // freq of high tone
+//#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
+
+#define LOW_TONE_AOA_SOLID    60      // % (and above) where a solid low tone is played.
+#define LOW_TONE_AOA_START    20      // % (and above) where low 
 #define LOW_TONE_PPS_MAX      8.5
 #define LOW_TONE_PPS_MIN      1.5
+#define LOW_TONE_HZ           400     // freq of low tone
 
-#define TONE_PIN          2     // TIOA0
-#define PIN_LED1          13    // internal LED for showing AOA status.
-#define PIN_LED2          54    // aka A0. external LED for showing serial input.
-#define TONE1600hz        1600 
-#define TONE400hz         400
-#define PULSE_TONE        1
-#define SOLID_TONE        2
-#define TONE_OFF          3
+#define TONE_PIN              2     // TIOA0
+#define PIN_LED1              13    // internal LED for showing AOA status.
+#define PIN_LED2              54    // aka A0. external LED for showing serial input.
+#define PULSE_TONE            1
+#define SOLID_TONE            2
+#define TONE_OFF              3
+#define STARTUP_TONES_DELAY   120
 
 uint8_t toneState = false;
 unsigned char toneMode = PULSE_TONE;  // current mode of tone.  PULSE_TONE, SOLID_TONE, or TONE_OFF
@@ -79,10 +88,10 @@ int OldRange,  OldValue;
 float NewRange, NewValue;
 
 char inChar;                    // store single serial input char here.
-#define MAXSIZE 70              // max length of string
+#define MAXSIZE 90              // max length of string
 char input[MAXSIZE+1];          // buffer for full serial data input string.
 int inputPos = 0;               // current postion of serial data.
-char tempBuf[50];               // misc char buffer used for debug
+char tempBuf[90];               // misc char buffer used for debug
 
 void setup() {
   // put your setup code here, to run once:
@@ -95,25 +104,27 @@ void setup() {
 
   configureToneTimer();   //setup timer used for tone
 
+  digitalWrite(PIN_LED2, 1);
   setFrequencytone(400);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(600);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(800);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(1000);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(1200);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(1000);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(800);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(600);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(400);
-  delay(200);
+  delay(STARTUP_TONES_DELAY);
   setFrequencytone(0);
+  digitalWrite(PIN_LED2, 0);
   
   // timer callback is used for turning tone on/off.
   Timer4.attachInterrupt(tonePlayHandler);
@@ -125,6 +136,7 @@ void setup() {
 // We use our own counter for how often we should pause between tones (pulses per sec PPS)
 int cycleCounter = 0;
 int cycleCounterResetAt = FREQ_OF_FUNCTION;
+uint8_t Tone2FlipFlop = false;
 void tonePlayHandler(){
   cycleCounter++;
   // check if our counter has reach the reset mark.  if so flip the tone on/off and start again.
@@ -144,7 +156,7 @@ void tonePlayHandler(){
 #ifdef SHOW_SERIAL_DEBUG    
     Serial.println("SOLID TONE");
 #endif    
-    setFrequencytone(TONE400hz);
+    setFrequencytone(LOW_TONE_HZ);
     return; // skip the rest
   }
 
@@ -153,17 +165,27 @@ void tonePlayHandler(){
      digitalWrite(PIN_LED1, digitalRead(PIN_LED1)^1);  // cycle led on/off
      //sprintf(tempBuf, "handler() AOA:%i ASI:%i tone: %i PPS:%f handlerFreq: %i",AOA,ASI,toneFreq,pps, handlerFreq);
      //Serial.println(tempBuf);
-     if(highTone)
-        setFrequencytone(TONE1600hz);
-     else 
-        setFrequencytone(TONE400hz);
+     if(highTone) {
+// check if we want 2 different tones for the high tone mode.      
+#ifdef HIGH_TONE2_HZ
+        Tone2FlipFlop = Tone2FlipFlop ^ 1; 
+        if(Tone2FlipFlop)
+          setFrequencytone(HIGH_TONE_HZ);
+        else
+          setFrequencytone(HIGH_TONE2_HZ);
+#else
+        setFrequencytone(HIGH_TONE_HZ);
+#endif
+     } else {
+        setFrequencytone(LOW_TONE_HZ);
+     }
 
   } else {
     setFrequencytone(0);
   }
 }
 
-void checkAOA_Dynon() {
+void checkAOA() {
   if(ASI <= MUTE_AUDIO_UNDER_IAS) {
 #ifdef SHOW_SERIAL_DEBUG    
   // show audio muted and debug info.
@@ -179,13 +201,13 @@ void checkAOA_Dynon() {
   }
   
   // check AOA value and set tone and pauses between tones according to 
-  if(AOA >= 90) {
-    // play 20 pps 1600hz tone
+  if(AOA >= HIGH_TONE_AOA_STALL) {
+    // play 20 pps HIGH tone
     highTone = true;
-    setPPSTone(20);
+    setPPSTone(HIGH_TONE_STALL_PPS);
     toneMode = PULSE_TONE;
-  } else if(AOA >= 70) {
-    // play 1600hz tone at Pulse Rate 1.5 PPS to 6.2 PPS (depending on AOA value)
+  } else if(AOA >= HIGH_TONE_AOA_START) {
+    // play HIGH tone at Pulse Rate 1.5 PPS to 6.2 PPS (depending on AOA value)
     highTone = true;
     OldValue = AOA-69;
     toneMode = PULSE_TONE;
@@ -194,15 +216,14 @@ void checkAOA_Dynon() {
     NewRange = HIGH_TONE_PPS_MAX - HIGH_TONE_PPS_MIN; // (NewMax - NewMin)  
     NewValue = (((OldValue - 1) * NewRange) / OldRange) + HIGH_TONE_PPS_MIN; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
     setPPSTone(NewValue);
-  } else if(AOA >= 60) {
-    // play a steady 400hz tone
+  } else if(AOA >= LOW_TONE_AOA_SOLID) {
+    // play a steady LOW tone
     highTone = false;
     toneMode = SOLID_TONE;
-    //setFrequencytone(TONE400hz);    
-  } else if(AOA > 20) {
+  } else if(AOA > LOW_TONE_AOA_START) {
     toneMode = PULSE_TONE;
     highTone = false;
-    // play 400hz tone at Pulse Rate 1.5 PPS to 8.2 PPS (depending on AOA value)
+    // play LOW tone at Pulse Rate 1.5 PPS to 8.2 PPS (depending on AOA value)
     // scale number using this. http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
     OldValue = AOA-20;
     OldRange = 40 - 1;  //(OldMax - OldMin)  
@@ -237,7 +258,31 @@ void loop() {
         input[inputPos]=inChar;
         inputPos++;
         cyclesWOSerialData = 0;
-        if (inChar == '\n' && inputPos == DYNON_SERIAL_LEN) {  // is EOL?
+
+        // check for dynon skyview data.
+        if (inChar == '\n' && inputPos == DYNON_SKYVIEW_SERIAL_LEN && input[0]=='!' && input[1]=='1') {
+          // skyview data starts with a '!1'... the D series efis has no line prefix.  
+          tempBuf[0] = input[43]; //
+          tempBuf[1] = input[44]; //
+          tempBuf[2] = '\0'; //term string
+          liveAOA = strtol(tempBuf, NULL, 10); //convert to int
+
+          // get AOA value
+#ifdef USE_AOA_AVERAGE
+          myAverageAOA += liveAOA;            // store and calcute the mean average AOA from previous values.
+          AOA = myAverageAOA.process().mean;
+#else          
+          AOA = liveAOA;  // else just use the live AOA value.
+#endif
+          // get ASI (4 digits) but we only want the first 3. we don't need a 10/th of a knot
+          tempBuf[0] = input[23]; //
+          tempBuf[1] = input[24]; //
+          tempBuf[2] = input[25]; //
+          tempBuf[3] = '\0'; //
+          ASI = strtol(tempBuf, NULL, 10); //convert to int (data comes in knots already on skyview)
+          validAOADataFound();
+        } else if (inChar == '\n' && inputPos == DYNON_SERIAL_LEN) {  // is EOL?
+          // else check for dynon d series data.
           // get AOA from dynon efis string.  details of format can be found from dynon pdf manual.
           tempBuf[0] = input[39]; //
           tempBuf[1] = input[40]; //
@@ -266,19 +311,14 @@ void loop() {
           tempBuf[3] = input[28]; //
           tempBuf[4] = '\0'; //
           ALT = (strtol(tempBuf, NULL, 10) * 0.328) * 10; //convert to long (and from meters to feet)
-
-          // check how often we want to sample the serial data.
-          LedCountDown --;
-          if(LedCountDown<1) {
-             digitalWrite(PIN_LED2, digitalRead(PIN_LED2)^1);  // cycle serial RX led on/off
-             LedCountDown = SERIAL_SAMPLE_RATE;
-             checkAOA_Dynon();  // check AOA data from dynon and store result into AOA var.
-             // TODO: check if we have a different EFIS and create seperate parse function.
-          }
-          inputPos = 0;  // reset postion to start of buffer string for next round.
+          validAOADataFound();
+        } else if(inChar == '\n') {
+          // if we are at the end of line then reset postion to start looking for a new line.
+          inputPos = 0; 
+        } else if(inputPos>DYNON_SKYVIEW_SERIAL_LEN) {
+          // else safety check, if we went past the max number of chars then reset to zero
+          inputPos = 0;
         }
-        // else safety check, if we went past the number of expected chars then reset to 0.
-        if(inputPos>DYNON_SERIAL_LEN) inputPos = 0;
         
       }
 
@@ -294,7 +334,16 @@ void loop() {
       } 
 }
 
-
+void validAOADataFound() {
+  // check how often we want to sample the serial data.
+  LedCountDown --;
+  if(LedCountDown<1) {
+     digitalWrite(PIN_LED2, digitalRead(PIN_LED2)^1);  // cycle serial RX led on/off
+     LedCountDown = SERIAL_SAMPLE_RATE;
+     checkAOA();  // check AOA data from dynon and store result into AOA var.
+  }
+  inputPos = 0;  // reset postion to start of buffer string for next round.
+}
 
 void configureToneTimer() {
   // Configure TONE_PIN pin as timer output
