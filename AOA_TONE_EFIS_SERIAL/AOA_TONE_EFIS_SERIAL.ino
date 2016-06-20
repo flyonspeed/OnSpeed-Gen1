@@ -45,20 +45,39 @@
 #define DYNON_SERIAL_LEN              53
 #define DYNON_SKYVIEW_SERIAL_LEN      74
 
-// AOA values & Tone Pulse Per Sec (PPS) 
-#define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
-#define HIGH_TONE_AOA_STALL   90      // % (and above) where stall happens.
-#define HIGH_TONE_AOA_START   70      // % (and above) where high tone starts
-#define HIGH_TONE_PPS_MAX     6.5     // 6.5   
-#define HIGH_TONE_PPS_MIN     1.5     // 1.5
-#define HIGH_TONE_HZ          1600    // freq of high tone
-//#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
+#define MIKE_SETUP            // if this is defined then use settings for his RV4 (dynon D10)
 
-#define LOW_TONE_AOA_SOLID    60      // % (and above) where a solid low tone is played.
-#define LOW_TONE_AOA_START    20      // % (and above) where low 
-#define LOW_TONE_PPS_MAX      8.5
-#define LOW_TONE_PPS_MIN      1.5
-#define LOW_TONE_HZ           400     // freq of low tone
+#ifdef MIKE_SETUP
+  // AOA values & Tone Pulse Per Sec (PPS) 
+  #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
+  #define HIGH_TONE_AOA_STALL   80      // % (and above) where stall happens.
+  #define HIGH_TONE_AOA_START   60      // % (and above) where high tone starts
+  #define HIGH_TONE_PPS_MAX     6.5     // 6.5   
+  #define HIGH_TONE_PPS_MIN     1.5     // 1.5
+  #define HIGH_TONE_HZ          1600    // freq of high tone
+  //#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
+  #define LOW_TONE_AOA_SOLID    50      // % (and above) where a solid low tone is played.
+  #define LOW_TONE_AOA_START    20      // % (and above) where low 
+  #define LOW_TONE_PPS_MAX      8.5
+  #define LOW_TONE_PPS_MIN      1.5
+  #define LOW_TONE_HZ           400     // freq of low tone
+#else
+  // AOA values & Tone Pulse Per Sec (PPS) 
+  #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
+  #define HIGH_TONE_AOA_STALL   90      // % (and above) where stall happens.
+  #define HIGH_TONE_AOA_START   70      // % (and above) where high tone starts
+  #define HIGH_TONE_PPS_MAX     6.5     // 6.5   
+  #define HIGH_TONE_PPS_MIN     1.5     // 1.5
+  #define HIGH_TONE_HZ          1600    // freq of high tone
+  //#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
+  #define LOW_TONE_AOA_SOLID    60      // % (and above) where a solid low tone is played.
+  #define LOW_TONE_AOA_START    20      // % (and above) where low 
+  #define LOW_TONE_PPS_MAX      8.5
+  #define LOW_TONE_PPS_MIN      1.5
+  #define LOW_TONE_HZ           400     // freq of low tone
+#endif
+
+
 
 #define TONE_PIN              2     // TIOA0
 #define PIN_LED1              13    // internal LED for showing AOA status.
@@ -189,8 +208,8 @@ void checkAOA() {
   if(ASI <= MUTE_AUDIO_UNDER_IAS) {
 #ifdef SHOW_SERIAL_DEBUG    
   // show audio muted and debug info.
-  sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
-  Serial.println(tempBuf);
+  //sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
+  //Serial.println(tempBuf);
   toneMode = TONE_OFF;
   return;
 #endif
@@ -209,7 +228,7 @@ void checkAOA() {
   } else if(AOA >= HIGH_TONE_AOA_START) {
     // play HIGH tone at Pulse Rate 1.5 PPS to 6.2 PPS (depending on AOA value)
     highTone = true;
-    OldValue = AOA-69;
+    OldValue = AOA-(HIGH_TONE_AOA_START-1);
     toneMode = PULSE_TONE;
     // scale number using this. http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
     OldRange = 20 - 1;  //(OldMax - OldMin)  
@@ -225,7 +244,7 @@ void checkAOA() {
     highTone = false;
     // play LOW tone at Pulse Rate 1.5 PPS to 8.2 PPS (depending on AOA value)
     // scale number using this. http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
-    OldValue = AOA-20;
+    OldValue = AOA-LOW_TONE_AOA_START;
     OldRange = 40 - 1;  //(OldMax - OldMin)  
     NewRange = LOW_TONE_PPS_MAX - LOW_TONE_PPS_MIN; // (NewMax - NewMin)  
     NewValue = (((OldValue - 1) * NewRange) / OldRange) + LOW_TONE_PPS_MAX; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
@@ -258,7 +277,7 @@ void loop() {
         input[inputPos]=inChar;
         inputPos++;
         cyclesWOSerialData = 0;
-
+        //Serial.println(inChar);
         // check for dynon skyview data.
         if (inChar == '\n' && inputPos == DYNON_SKYVIEW_SERIAL_LEN && input[0]=='!' && input[1]=='1') {
           // skyview data starts with a '!1'... the D series efis has no line prefix.  
@@ -280,6 +299,13 @@ void loop() {
           tempBuf[2] = input[25]; //
           tempBuf[3] = '\0'; //
           ASI = strtol(tempBuf, NULL, 10); //convert to int (data comes in knots already on skyview)
+
+#ifdef SHOW_SERIAL_DEBUG    
+  // show serial debug info for skyview data found.
+  sprintf(tempBuf, "SKYVIEW AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
+  Serial.println(tempBuf);
+#endif
+
           validAOADataFound();
         } else if (inChar == '\n' && inputPos == DYNON_SERIAL_LEN) {  // is EOL?
           // else check for dynon d series data.
