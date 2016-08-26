@@ -45,22 +45,41 @@
 #define DYNON_SERIAL_LEN              53
 #define DYNON_SKYVIEW_SERIAL_LEN      74
 
-#define MIKE_SETUP            // if this is defined then use settings for his RV4 (dynon D10)
+//#define MIKE_SETUP 1            // if this is defined then use settings for his RV4 (dynon D10)
+#define NIGEL_SETUP 1
 
-#ifdef MIKE_SETUP
+#ifdef NIGEL_SETUP
   // AOA values & Tone Pulse Per Sec (PPS) 
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
   #define HIGH_TONE_AOA_STALL   80      // % (and above) where stall happens.
-  #define HIGH_TONE_AOA_START   60      // % (and above) where high tone starts
+  #define HIGH_TONE_AOA_START   66      // % (and above) where high tone starts
   #define HIGH_TONE_PPS_MAX     6.5     // 6.5   
   #define HIGH_TONE_PPS_MIN     1.5     // 1.5
   #define HIGH_TONE_HZ          1600    // freq of high tone
   //#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
-  #define LOW_TONE_AOA_SOLID    50      // % (and above) where a solid low tone is played.
-  #define LOW_TONE_AOA_START    20      // % (and above) where low 
+  #define LOW_TONE_AOA_SOLID    55      // % (and above) where a solid low tone is played.
+  #define LOW_TONE_AOA_START    40      // % (and above) where low 
+  #define LOW_TONE_PPS_MAX      6.5
+  #define LOW_TONE_PPS_MIN      0.5
+  #define LOW_TONE_HZ           400     // freq of low tone
+  #define BAUDRATE_EFIS         9600
+  
+#else
+#ifdef MIKE_SETUP
+  // AOA values & Tone Pulse Per Sec (PPS) 
+  #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
+  #define HIGH_TONE_AOA_STALL   72      // % (and above) where stall happens.
+  #define HIGH_TONE_AOA_START   32      // % (and above) where high tone starts
+  #define HIGH_TONE_PPS_MAX     6.5     // 6.5   
+  #define HIGH_TONE_PPS_MIN     1.5     // 1.5
+  #define HIGH_TONE_HZ          1600    // freq of high tone
+  //#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
+  #define LOW_TONE_AOA_SOLID    22      // % (and above) where a solid low tone is played.
+  #define LOW_TONE_AOA_START    0      // % (and above) where low 
   #define LOW_TONE_PPS_MAX      8.5
   #define LOW_TONE_PPS_MIN      1.5
   #define LOW_TONE_HZ           400     // freq of low tone
+  #define BAUDRATE_EFIS         115200
 #else
   // AOA values & Tone Pulse Per Sec (PPS) 
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
@@ -75,8 +94,10 @@
   #define LOW_TONE_PPS_MAX      8.5
   #define LOW_TONE_PPS_MIN      1.5
   #define LOW_TONE_HZ           400     // freq of low tone
+  #define BAUDRATE_EFIS         115200
+  
 #endif
-
+#endif
 
 
 #define TONE_PIN              2     // TIOA0
@@ -119,7 +140,7 @@ void setup() {
   pinMode(PIN_LED2, OUTPUT);
 
   Serial.begin(115200);   //Init hardware serial port (ouput to computer for debug)
-  Serial3.begin(115200);  //Init hardware serial port (input from EFIS)
+  Serial3.begin(BAUDRATE_EFIS);  //Init hardware serial port (input from EFIS)
 
   configureToneTimer();   //setup timer used for tone
 
@@ -208,8 +229,8 @@ void checkAOA() {
   if(ASI <= MUTE_AUDIO_UNDER_IAS) {
 #ifdef SHOW_SERIAL_DEBUG    
   // show audio muted and debug info.
-  //sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
-  //Serial.println(tempBuf);
+  sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
+  Serial.println(tempBuf);
   toneMode = TONE_OFF;
   return;
 #endif
@@ -279,6 +300,7 @@ void loop() {
         cyclesWOSerialData = 0;
         //Serial.println(inChar);
         // check for dynon skyview data.
+
         if (inChar == '\n' && inputPos == DYNON_SKYVIEW_SERIAL_LEN && input[0]=='!' && input[1]=='1') {
           // skyview data starts with a '!1'... the D series efis has no line prefix.  
           tempBuf[0] = input[43]; //
@@ -344,6 +366,9 @@ void loop() {
         } else if(inputPos>DYNON_SKYVIEW_SERIAL_LEN) {
           // else safety check, if we went past the max number of chars then reset to zero
           inputPos = 0;
+#ifdef SHOW_SERIAL_DEBUG    
+        Serial.println("OVER FLOW DATA");
+#endif
         }
         
       }
@@ -393,7 +418,16 @@ void configureToneTimer() {
   //NVIC_EnableIRQ(TC0_IRQn);
 }
 
+const uint32_t volHigh = 50; 
+const uint32_t volMed = 10; 
+const uint32_t volLow = 1; 
+
 void setFrequencytone(uint32_t frequency)
+{
+  setFrequencytoneAndVol(frequency,volHigh);
+}
+
+void setFrequencytoneAndVol(uint32_t frequency,uint32_t vol)
 {
   
   if(frequency < 20 || frequency > 20000) {
@@ -409,8 +443,8 @@ void setFrequencytone(uint32_t frequency)
   }
   
   const uint32_t rc = VARIANT_MCK / 128 / frequency; 
-  const uint32_t ra = rc >> 2; // 50% duty cycle 
-  const uint32_t rb = ra >> 2; // 20% duty cycle 
+  //const uint32_t ra = 50; //rc >> 2; // 50% duty cycle 
+  //const uint32_t rb = 50;//ra >> 2; // 20% duty cycle 
 
   //Serial.print("rc=");Serial.println(rc);
   //Serial.print("ra=");Serial.println(ra);
@@ -418,8 +452,8 @@ void setFrequencytone(uint32_t frequency)
 
   TC_Stop(chTC, chNo);
   TC_SetRC(chTC, chNo, rc);    // set frequency
-  TC_SetRA(chTC, chNo, ra);    
-  TC_SetRB(chTC, chNo, rb);    
+  TC_SetRA(chTC, chNo, vol);   // duty cycle 
+  TC_SetRB(chTC, chNo, vol);    
   TC_Start(chTC, chNo);
   toneFreq = frequency;
   
