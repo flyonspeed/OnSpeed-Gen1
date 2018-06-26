@@ -37,7 +37,7 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
    * 12v to usb charger adapter. (useful for powering the arduino in a aircraft)
 
 # Schematic
-![schematic](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/AOA_Due_schem.png?raw=true)
+![schematic](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/AOA_Due_schem_5Jun18.png?raw=true)
 
 # Notes
  * The audio out is designed to plug into the audio panel of your aircraft.
