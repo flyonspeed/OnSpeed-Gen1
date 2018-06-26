@@ -45,10 +45,11 @@
 #define DYNON_SERIAL_LEN              53
 #define DYNON_SKYVIEW_SERIAL_LEN      74
 
-//#define MIKE_SETUP 1            // if this is defined then use settings for his RV4 (dynon D10)
-#define NIGEL_SETUP 1
+//#define SETUP_DYNON_D100 1            // if this is defined then use settings (dynon D10 or D100)
+#define SETUP_DYNON_SKYVIEW 1           // if defined then use settings for dynon skyview
 
-#ifdef NIGEL_SETUP
+#ifdef SETUP_DYNON_SKYVIEW
+  // Dynon Skyview settings.
   // AOA values & Tone Pulse Per Sec (PPS) 
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
   #define HIGH_TONE_AOA_STALL   80      // % (and above) where stall happens.
@@ -65,7 +66,8 @@
   #define BAUDRATE_EFIS         9600
   
 #else
-#ifdef MIKE_SETUP
+#ifdef SETUP_DYNON_D100
+  // Dynon D100 or D10 settings.
   // AOA values & Tone Pulse Per Sec (PPS) 
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
   #define HIGH_TONE_AOA_STALL   72      // % (and above) where stall happens.
@@ -79,9 +81,10 @@
   #define LOW_TONE_PPS_MAX      8.5
   #define LOW_TONE_PPS_MIN      1.5
   #define LOW_TONE_HZ           400     // freq of low tone
-  #define BAUDRATE_EFIS         115200
+  #define BAUDRATE_EFIS         115200  // default baud rate for D100/D10
 #else
-  // AOA values & Tone Pulse Per Sec (PPS) 
+  // AOA values & Tone Pulse Per Sec (PPS)
+  // DEFAULT SETTINGS.
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
   #define HIGH_TONE_AOA_STALL   90      // % (and above) where stall happens.
   #define HIGH_TONE_AOA_START   70      // % (and above) where high tone starts
