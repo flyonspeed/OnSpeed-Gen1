@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // AOA EFIS Serial to audio tone 
 // Supports: Dynon EFIS data using a Arduino Due board
-// Ver 1.5
+// Ver 1.5.1
 // Christopher Jones 6/10/2016
 //
 // - Read data in from Serial3 on DUE board. (Dynon is at 115200 baud)
@@ -11,6 +11,7 @@
 // - If no serial data is detected audio tone turns off and LED1 is off
 // - MUTE_AUDIO_UNDER_IAS define is used to only activate audio tones if above a given airspeed
 // 
+// 7/9/2018 - fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
 
 #include <DueTimer.h>         // timer lib functions for using DUE timers and callbacks.
 #include <stdint.h>
@@ -255,7 +256,7 @@ void checkAOA() {
     OldValue = AOA-(HIGH_TONE_AOA_START-1);
     toneMode = PULSE_TONE;
     // scale number using this. http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
-    OldRange = 20 - 1;  //(OldMax - OldMin)  
+    OldRange = HIGH_TONE_AOA_STALL - HIGH_TONE_AOA_START; //20 - 1;  //(OldMax - OldMin)  
     NewRange = HIGH_TONE_PPS_MAX - HIGH_TONE_PPS_MIN; // (NewMax - NewMin)  
     NewValue = (((OldValue - 1) * NewRange) / OldRange) + HIGH_TONE_PPS_MIN; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
     setPPSTone(NewValue);
@@ -269,7 +270,7 @@ void checkAOA() {
     // play LOW tone at Pulse Rate 1.5 PPS to 8.2 PPS (depending on AOA value)
     // scale number using this. http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
     OldValue = AOA-LOW_TONE_AOA_START;
-    OldRange = 40 - 1;  //(OldMax - OldMin)  
+    OldRange = LOW_TONE_AOA_SOLID - LOW_TONE_AOA_START; //40 - 1;  //(OldMax - OldMin)  
     NewRange = LOW_TONE_PPS_MAX - LOW_TONE_PPS_MIN; // (NewMax - NewMin)  
     NewValue = (((OldValue - 1) * NewRange) / OldRange) + LOW_TONE_PPS_MAX; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
     setPPSTone(NewValue);
