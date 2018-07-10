@@ -13,6 +13,9 @@
 // 
 // 7/9/2018 - fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
 
+#define SETUP_DYNON_D100             // if this is defined then use settings (dynon D10 or D100)
+//#define SETUP_DYNON_SKYVIEW            // if defined then use settings for dynon skyview
+
 #include <DueTimer.h>         // timer lib functions for using DUE timers and callbacks.
 #include <stdint.h>
 #include <Arduino.h>
@@ -46,11 +49,9 @@
 #define DYNON_SERIAL_LEN              53
 #define DYNON_SKYVIEW_SERIAL_LEN      74
 
-//#define SETUP_DYNON_D100 1            // if this is defined then use settings (dynon D10 or D100)
-#define SETUP_DYNON_SKYVIEW 1           // if defined then use settings for dynon skyview
-
 #ifdef SETUP_DYNON_SKYVIEW
   // Dynon Skyview settings.
+  // For skyview export ahrs data out one of the 5 serialports (only needs serial output to AOA box, no serial input needed)
   // AOA values & Tone Pulse Per Sec (PPS) 
   #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
   #define HIGH_TONE_AOA_STALL   80      // % (and above) where stall happens.
@@ -64,8 +65,7 @@
   #define LOW_TONE_PPS_MAX      6.5
   #define LOW_TONE_PPS_MIN      0.5
   #define LOW_TONE_HZ           400     // freq of low tone
-  #define BAUDRATE_EFIS         9600
-  
+  #define BAUDRATE_EFIS         9600    // set skyview to 9600 (or change this value to what you want)
 #else
 #ifdef SETUP_DYNON_D100
   // Dynon D100 or D10 settings.
@@ -99,10 +99,8 @@
   #define LOW_TONE_PPS_MIN      1.5
   #define LOW_TONE_HZ           400     // freq of low tone
   #define BAUDRATE_EFIS         115200
-  
 #endif
 #endif
-
 
 #define TONE_PIN              2     // TIOA0
 #define PIN_LED1              13    // internal LED for showing AOA status.
