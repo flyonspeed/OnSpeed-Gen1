@@ -1,5 +1,5 @@
 # AOA audio tone indicator from EFIS serial data
-Audio tone indicator of AOA from a aircraft EFIS serial port. Using a Ardunino Due connected to a Dynon Efis D10, D100 or D180 via the serial port.
+Audio tone indicator of AOA from a aircraft EFIS serial port. Using a Ardunino Due connected to a Dynon Efis D10, D100, D180 , or SkyView via the serial port.
 
 Normally AOA is presented in a visual form of green,yellow,red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone so the pilot does not have to look at the instrument panel.
 
@@ -26,13 +26,12 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
    * *Gaussian* (version 1.0.7 used)
    * *LinkedList* (version 1.0.7 used)
  - And few other things to finish this project.
-   * 0.22µF Ceramic Capacitor
-   * 0.02µF Ceramic Capacitor
-   * 100Ω Resistor
-   * 1kΩ Resistor
+   * 10kΩ Variable Potentiometer - used for adjusted audio output level 
+   * 1kΩ Resistor (2 needed)
    * Audio Jack (TRS) 3.5mm
-   * [Serial to TTL DB9 Adapter](http://www.ebay.com/sch/i.html_max232+serial+ttl+DB9) used to convert the serial data to TTL serial datat that the arduino can understand.
-   * Red LED (shows serial data status)
+   * [Serial to TTL DB9 Adapter](http://www.ebay.com/sch/i.html_max232+serial+ttl+DB9) used to convert the serial data to TTL serial datat that the arduino can understand.  There are several different types.  Ones that use the MAX3232 chipset seem to work the best.
+   * Red LED (flashes when valid serial data is received)
+   * Green LED (flashes when valid AOA data is received)
    * USB micro cable to power Arduino Due board
    * 12v to usb charger adapter. (useful for powering the arduino in a aircraft)
 
@@ -48,8 +47,10 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
 
  * The red led (Serial RX) switches on/off every time it recieves a serial line of data that it understands.  Since the dynon sends data pretty fast this led may look like a flicking candle.
  
+ * For setting up on skyview system need to setup skyview to trasmit(TX) AHRS data to available serial port.  Receiveing does not need to be enabled because this box does not send data back to dynon.  Default is using 9600 baud for serial output.  But this can be changed in source code.
+ 
  
 # Todo
-- Test on Dynon Skyview EFIS 
+- Test on Dynon Skyview EFIS (Completed and works!)
 - Support other EFIS units.  Like MGL, Advanced, GRT
  
