@@ -5,7 +5,7 @@ Audio tone indicator of aircraft's level of AOA. Using an Ardunino Due connected
 
 Normally AOA is presented in a visual form of green, yellow, red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone to let the pilot know where they are on the power curve (not just the stall).  
 
-This is different from other AOA audio indicators because this system is helping you get to best perforance on the AOA curve (also known as "On Speed").  Most AOA tones are telling you how close the aircraft is to a stall, which is helpful but doesn't tell the whole story.  Our tests and final results will be shared with the avaition community and hopefully adopted or built in to exsiting avaition products.  Currently MGL avionics has added this to their iEFIS products.
+This is different from other AOA audio indicators because this system is helping you get to best perforance on the AOA curve (also known as "On Speed").  Most AOA tones are telling you how close the aircraft is to a stall, which is helpful but doesn't tell the whole story.  Our tests and final results will be shared with the avaition community and hopefully adopted or built in to exsiting avaition products.  Currently MGL avionics has added this tone logic to their iEFIS products.
 
 This project won the [2018 Founder’s Innovation Prize](https://www.eaa.org/en/airventure/eaa-airventure-news-and-multimedia/eaa-airventure-news/eaa-airventure-oshkosh/07-25-2018-aural-angle-of-attack-project-wins-founders-innovation-prize).  Thanks so much to the EAA and the other fianalists.  
 
@@ -54,6 +54,8 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
  * The green led indicates that valid AOA data is being recieved and tones are being played.  If aircraft is not moving or no air is flowing through the pitot this light will not flash.
  
  * For setting up on skyview system need to setup skyview to trasmit(TX) AHRS data to available serial port.  Receiveing does not need to be enabled because this box does not send data back to dynon.  Default is using 9600 baud for serial output.  But this can be changed in source code.
+ 
+ * A voltage input version of this code can be found here.  https://github.com/dinglewanker/aoa-tone-voltage It takes in a voltage level instead of a serial input.  This could be useful for other types of AOA systems.
  
  
 # Todo
