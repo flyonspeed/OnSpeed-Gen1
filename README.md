@@ -7,6 +7,8 @@ Normally AOA is presented in a visual form of green, yellow, red to indicate how
 
 This is different from other AOA audio indicators because this system is helping you get to best perforance on the AOA curve (also known as "On Speed").  Most AOA tones are telling you how close the aircraft is to a stall, which is helpful but doesn't tell the whole story.  Our tests and final results will be shared with the avaition community and hopefully adopted or built in to exsiting avaition products.  Currently MGL avionics has added this to their iEFIS products.
 
+This project won the [2018 Founder’s Innovation Prize](https://www.eaa.org/en/airventure/eaa-airventure-news-and-multimedia/eaa-airventure-news/eaa-airventure-oshkosh/07-25-2018-aural-angle-of-attack-project-wins-founders-innovation-prize).  Thanks so much to the EAA and the other fianalists.  
+
 USE AT YOUR OWN RISK.  THIS IS FOR EXPERIMENTAL AIRCRAFT ONLY. 
 
 # Background
