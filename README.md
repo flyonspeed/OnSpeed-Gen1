@@ -1,7 +1,11 @@
-# AOA audio tone indicator from EFIS serial data
-Audio tone indicator of AOA from a aircraft EFIS serial port. Using a Ardunino Due connected to a Dynon Efis D10, D100, D180 , or SkyView via the serial port.
+# AOA aural indicator for flying "On Speed" from EFIS serial data
+Goal of this project is to find the best aural logic and give the pilot a "Head up, eyes out solution".
 
-Normally AOA is presented in a visual form of green,yellow,red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone so the pilot does not have to look at the instrument panel.
+Audio tone indicator of aircraft's level of AOA. Using an Ardunino Due connected to a Dynon Efis D10, D100, D180 , or SkyView via the serial port.
+
+Normally AOA is presented in a visual form of green, yellow, red to indicate how close to a stall the aircraft is.  This project turns the visual indicator into a audioable tone to let the pilot know where they are on the power curve (not just the stall).  
+
+This is different from other AOA audio indicators because this system is helping you get to best perforance on the AOA curve (also known as "On Speed").  Most AOA tones are telling you how close the aircraft is to a stall, which is helpful but doesn't tell the whole story.  Our tests and final results will be shared with the avaition community and hopefully adopted or built in to exsiting avaition products.  Currently MGL avionics has added this to their iEFIS products.
 
 USE AT YOUR OWN RISK.  THIS IS FOR EXPERIMENTAL AIRCRAFT ONLY. 
 
@@ -17,7 +21,7 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
 
 
 # Requirements
- - Dynon EFIS D10, D100, or D180
+ - Dynon EFIS D10, D100, D180, Skyview
  - Arduino Due.  Can be purchased at many different online stores like [amazon](https://www.amazon.com/OSOYOO-Compatible-Shield-Module-Arduino/dp/B010SCWGE2/) or  [ebay](http://www.ebay.com/sch/items/?_nkw=arduino+due) 
    * The due board has 2 usb ports.  Use the "programming" usb port plugged into your computer to program the board.  When using in a aircraft you can power the board with either usb port.
  - [Ardino IDE](https://www.arduino.cc/en/Main/Software) for mac, linux , or windows. This is used to program your arduino board. And a [beginers guide to Arduino Due](https://www.arduino.cc/en/Guide/ArduinoDue) is a good idea.  You will need to [install Arduino SAM Board Core](https://www.arduino.cc/en/Guide/Cores) in order to build for a Due board. "Arduino SAM Boards (32-bits ARM Cortex-M3)" ver 1.6.8 is what was used during development.
@@ -39,18 +43,22 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
 ![schematic](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/AOA_Due_schem_5Jun18.png?raw=true)
 
 # Notes
- * The audio out is designed to plug into the audio panel of your aircraft.
+ * The audio out is designed to plug into the audio panel of your aircraft. Or into the aux audio input on some headsets.
  
- * Using a 6k resistor directly from pin 2 (audio out) of the due board would be a quick hack for hooking into a headphone or headphone jack.  You could also use a variable resistor here to adjust the volume by hand.
+ * It may be a good idea to hook a switch inline with the audio out of the board.  This could be useful to turn the device on/off when you don't want to hear a annoying beep in your ear.  Or just using the variable potentiometer to turn down the audio when you don't want to hear it.
 
- * It may be a good idea to hook a switch inline with the serial RX or audio out of the board.  This could be useful to turn the device on/off when you don't want to hear a annoying beep in your ear.
-
- * The red led (Serial RX) switches on/off every time it recieves a serial line of data that it understands.  Since the dynon sends data pretty fast this led may look like a flicking candle.
+ * The red led (Serial RX) switches on/off every time it recieves a serial line of data that it understands.  Since the dynon sends data pretty fast this led may look like a flicking candle. At slower baud rates on the skyview the red led will flash slower.
+ 
+ * The green led indicates that valid AOA data is being recieved and tones are being played.  If aircraft is not moving or no air is flowing through the pitot this light will not flash.
  
  * For setting up on skyview system need to setup skyview to trasmit(TX) AHRS data to available serial port.  Receiveing does not need to be enabled because this box does not send data back to dynon.  Default is using 9600 baud for serial output.  But this can be changed in source code.
  
  
 # Todo
 - Test on Dynon Skyview EFIS (Completed and works!)
-- Support other EFIS units.  Like MGL, Advanced, GRT
+- Support other EFIS units.  Like Advanced, GRT, Garmin, etc.
+- Support other external devices like Levil BOM.
+- Work with airball.  (airball.aero)
+- Work with whomever wants to work with us.
+
  
