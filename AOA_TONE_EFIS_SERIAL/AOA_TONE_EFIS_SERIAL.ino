@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // AOA EFIS Serial to audio tone 
 // Supports: Dynon EFIS data using a Arduino Due board
-// Ver 1.5.1
+// Ver 1.5.2
 // Christopher Jones 6/10/2016
 //
 // - Read data in from Serial3 on DUE board. (Dynon is at 115200 baud)
@@ -11,7 +11,8 @@
 // - If no serial data is detected audio tone turns off and LED1 is off
 // - MUTE_AUDIO_UNDER_IAS define is used to only activate audio tones if above a given airspeed
 // 
-// 7/9/2018 - fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
+// 7/9/2018 - 1.5.1 fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
+// 9/2/2018 - 1.5.2 Atempts to fix hang up issues with skyview data.  Changed start up tones.  added more comments. fix min PPS for low tone.
 
 #define SETUP_DYNON_D100             // if this is defined then use settings (dynon D10 or D100)
 //#define SETUP_DYNON_SKYVIEW            // if defined then use settings for dynon skyview
@@ -21,7 +22,7 @@
 #include <Arduino.h>
 
 #include <Gaussian.h>         // gaussian lib used for avg out AOA values.
-#include <LinkedList.h>       // linked list is also required.
+//#include <LinkedList.h>       // linked list is also required.
 #include <GaussianAverage.h>  // more info at https://github.com/ivanseidel/Gaussian
 
 // Output serial debug infomation. (comment out the following line to turn off serial debug output)
@@ -109,6 +110,7 @@
 #define SOLID_TONE            2
 #define TONE_OFF              3
 #define STARTUP_TONES_DELAY   120
+#define STARTUP_TONES_DELAY2  300
 
 uint8_t toneState = false;
 unsigned char toneMode = PULSE_TONE;  // current mode of tone.  PULSE_TONE, SOLID_TONE, or TONE_OFF
@@ -121,6 +123,7 @@ int lastAOA = 0;                      // save last AOA value here.
 unsigned int ALT = 0;                 // hold ALT (only used for debuging)
 int ASI = 0;                          // live Air Speed Indicated
 unsigned int cyclesWOSerialData = 0;  // keep track if not serial data is recieved.
+unsigned char efisTypeDetected = 0;   // auto detect which efis is being used. 0 no detection. 1 = D series, 2 = Skyview
 GaussianAverage myAverageAOA = GaussianAverage(AOA_HISTORY_MAX);
 static Tc *chTC = TC0;
 static uint32_t chNo = 0;
@@ -146,25 +149,14 @@ void setup() {
 
   configureToneTimer();   //setup timer used for tone
 
+  // startup tone sequence.
   digitalWrite(PIN_LED2, 1);
   setFrequencytone(400);
-  delay(STARTUP_TONES_DELAY);
+  delay(STARTUP_TONES_DELAY2);
   setFrequencytone(600);
-  delay(STARTUP_TONES_DELAY);
+  delay(STARTUP_TONES_DELAY2);
   setFrequencytone(800);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(1000);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(1200);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(1000);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(800);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(600);
-  delay(STARTUP_TONES_DELAY);
-  setFrequencytone(400);
-  delay(STARTUP_TONES_DELAY);
+  delay(STARTUP_TONES_DELAY2);
   setFrequencytone(0);
   digitalWrite(PIN_LED2, 0);
   
@@ -233,9 +225,9 @@ void checkAOA() {
   // show audio muted and debug info.
   sprintf(tempBuf, "AUDIO MUTED: Airspeed to low. Min:%i ASI:%i",MUTE_AUDIO_UNDER_IAS, ASI);
   Serial.println(tempBuf);
+#endif
   toneMode = TONE_OFF;
   return;
-#endif
   }
   
   if(lastAOA == AOA) {
@@ -270,7 +262,7 @@ void checkAOA() {
     OldValue = AOA-LOW_TONE_AOA_START;
     OldRange = LOW_TONE_AOA_SOLID - LOW_TONE_AOA_START; //40 - 1;  //(OldMax - OldMin)  
     NewRange = LOW_TONE_PPS_MAX - LOW_TONE_PPS_MIN; // (NewMax - NewMin)  
-    NewValue = (((OldValue - 1) * NewRange) / OldRange) + LOW_TONE_PPS_MAX; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
+    NewValue = (((OldValue - 1) * NewRange) / OldRange) + LOW_TONE_PPS_MIN; //(((OldValue - OldMin) * NewRange) / OldRange) + NewMin
     setPPSTone(NewValue);
   } else {
     toneMode = TONE_OFF;
@@ -296,21 +288,21 @@ int LedCountDown = SERIAL_SAMPLE_RATE;
 void loop() {
       // check for serial in from efis.
       while(Serial3.available()) {
-        inChar = (char)Serial3.read();
-        input[inputPos]=inChar;
-        inputPos++;
-        cyclesWOSerialData = 0;
-        //Serial.println(inChar);
-        // check for dynon skyview data.
+        inChar = (char)Serial3.read();  // read in char
+        input[inputPos]=inChar;         // save into string buffer.
+        inputPos++;                     // increment the string buffer postion.
+        cyclesWOSerialData = 0;         // reset the var thats keep track of when we last had serial data (used for turning off tone if no serial data found)
 
+        // check for dynon skyview data. based on length of string and if the 1st 2 chars match
         if (inChar == '\n' && inputPos == DYNON_SKYVIEW_SERIAL_LEN && input[0]=='!' && input[1]=='1') {
+          efisTypeDetected = 2;  // set skyview efis detected.
           // skyview data starts with a '!1'... the D series efis has no line prefix.  
-          tempBuf[0] = input[43]; //
-          tempBuf[1] = input[44]; //
-          tempBuf[2] = '\0'; //term string
+          tempBuf[0] = input[43]; // get the 2 bytes for aoa on skyview.
+          tempBuf[1] = input[44]; // 
+          tempBuf[2] = '\0'; // term string  (needed for when we convert a string to a int in the next line)
           liveAOA = strtol(tempBuf, NULL, 10); //convert to int
 
-          // get AOA value
+          // get AOA value (check if we are using a Gaussian function to smooth the values)
 #ifdef USE_AOA_AVERAGE
           myAverageAOA += liveAOA;            // store and calcute the mean average AOA from previous values.
           AOA = myAverageAOA.process().mean;
@@ -329,17 +321,18 @@ void loop() {
   sprintf(tempBuf, "SKYVIEW AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
   Serial.println(tempBuf);
 #endif
-
-          validAOADataFound();
-        } else if (inChar == '\n' && inputPos == DYNON_SERIAL_LEN) {  // is EOL?
+          validAOADataFound();  // run function to process tone.  because we found a valid AOA value.
+          
+        } else if (inChar == '\n' && inputPos == DYNON_SERIAL_LEN && efisTypeDetected != 2) {  // is EOL?
           // else check for dynon d series data.
+          // efisTypeDetected != 2 has been added to make sure we don't confused skyview data for d10 data and try to process..
           // get AOA from dynon efis string.  details of format can be found from dynon pdf manual.
           tempBuf[0] = input[39]; //
           tempBuf[1] = input[40]; //
-          tempBuf[2] = '\0'; //term string
+          tempBuf[2] = '\0'; //term string (needed for converting a string to a int in the next line)
           liveAOA = strtol(tempBuf, NULL, 10); //convert to int
 
-          // get AOA value
+          // get AOA value (check if we are using a Gaussian function to smooth the values)
 #ifdef USE_AOA_AVERAGE
           myAverageAOA += liveAOA;            // store and calcute the mean average AOA from previous values.
           AOA = myAverageAOA.process().mean;
@@ -351,10 +344,10 @@ void loop() {
           tempBuf[0] = input[20]; //
           tempBuf[1] = input[21]; //
           tempBuf[2] = input[22]; //
-          tempBuf[3] = '\0'; //
+          tempBuf[3] = '\0'; // terminate string (needed for converting a string to a int in the next line)
           ASI = strtol(tempBuf, NULL, 10) * 1.943; //convert to int (and from m/s to knots)
 
-          // get ALT (4 digits) in meters
+          // get ALT (4 digits) in meters.. this is really not used for this application.  we just collect it to show in debug.
           tempBuf[0] = input[25]; //
           tempBuf[1] = input[26]; //
           tempBuf[2] = input[27]; //
@@ -362,6 +355,7 @@ void loop() {
           tempBuf[4] = '\0'; //
           ALT = (strtol(tempBuf, NULL, 10) * 0.328) * 10; //convert to long (and from meters to feet)
           validAOADataFound();
+          
         } else if(inChar == '\n') {
           // if we are at the end of line then reset postion to start looking for a new line.
           inputPos = 0; 
@@ -378,6 +372,7 @@ void loop() {
       // check if no serial has been sent in a while.
       cyclesWOSerialData++;
       if(cyclesWOSerialData > 55500) {
+        //TODO:  should we do something more to inidicat to the user there is no serial data coming in?  this might be useful for troubleshooting after a install.
         toneMode = TONE_OFF;        // stop tone
         cyclesWOSerialData == 0;
         digitalWrite(PIN_LED2, 0);  // no EFIS serial data so turn off led.
@@ -387,6 +382,7 @@ void loop() {
       } 
 }
 
+// valid AOA data was found so this function will be ran.  Here we toggle the leds and see how often we should sample the AOA data.
 void validAOADataFound() {
   // check how often we want to sample the serial data.
   LedCountDown --;
