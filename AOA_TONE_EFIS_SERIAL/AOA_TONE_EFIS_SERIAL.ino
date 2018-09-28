@@ -13,9 +13,10 @@
 // 
 // 7/9/2018 - 1.5.1 fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
 // 9/2/2018 - 1.5.2 Atempts to fix hang up issues with skyview data.  Changed start up tones.  added more comments. fix min PPS for low tone.
+// 9/28/2018- 1.6.0 Fixed Skyview lockup issue.
 
-#define SETUP_DYNON_D100             // if this is defined then use settings (dynon D10 or D100)
-//#define SETUP_DYNON_SKYVIEW            // if defined then use settings for dynon skyview
+//#define SETUP_DYNON_D100             // if this is defined then use settings (dynon D10 or D100)
+#define SETUP_DYNON_SKYVIEW            // if defined then use settings for dynon skyview
 
 #include <DueTimer.h>         // timer lib functions for using DUE timers and callbacks.
 #include <stdint.h>
@@ -84,24 +85,9 @@
   #define LOW_TONE_PPS_MIN      1.5
   #define LOW_TONE_HZ           400     // freq of low tone
   #define BAUDRATE_EFIS         115200  // default baud rate for D100/D10
-#else
-  // AOA values & Tone Pulse Per Sec (PPS)
-  // DEFAULT SETTINGS.
-  #define HIGH_TONE_STALL_PPS   20      // how many PPS to play during stall
-  #define HIGH_TONE_AOA_STALL   90      // % (and above) where stall happens.
-  #define HIGH_TONE_AOA_START   70      // % (and above) where high tone starts
-  #define HIGH_TONE_PPS_MAX     6.5     // 6.5   
-  #define HIGH_TONE_PPS_MIN     1.5     // 1.5
-  #define HIGH_TONE_HZ          1600    // freq of high tone
-  //#define HIGH_TONE2_HZ         1500    // a 2nd high tone that it will cycle between (if defined)
-  #define LOW_TONE_AOA_SOLID    60      // % (and above) where a solid low tone is played.
-  #define LOW_TONE_AOA_START    20      // % (and above) where low 
-  #define LOW_TONE_PPS_MAX      8.5
-  #define LOW_TONE_PPS_MIN      1.5
-  #define LOW_TONE_HZ           400     // freq of low tone
-  #define BAUDRATE_EFIS         115200
 #endif
 #endif
+
 
 #define TONE_PIN              2     // TIOA0
 #define PIN_LED1              13    // internal LED for showing AOA status.
@@ -271,7 +257,7 @@ void checkAOA() {
   lastAOA = AOA;
 #ifdef SHOW_SERIAL_DEBUG    
   // show serial debug info.
-  sprintf(tempBuf, "AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
+  sprintf(tempBuf, "TONE AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
   Serial.println(tempBuf);
 #endif
 }
@@ -318,8 +304,11 @@ void loop() {
 
 #ifdef SHOW_SERIAL_DEBUG    
   // show serial debug info for skyview data found.
-  sprintf(tempBuf, "SKYVIEW AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
-  Serial.println(tempBuf);
+  // can't edit the tempBuf here.. was causing crash. Christopher. 9/26/2018
+  //sprintf(tempBuf, "SKYVIEW AOA:%i Live:%i ASI:%ikts ALT:%i PPS:%f cycleCounterResetAt: %i",AOA, liveAOA, ASI, ALT, pps, cycleCounterResetAt);
+  //Serial.println(tempBuf);
+   Serial.print("SKYVIEW AOA ");
+   Serial.println(AOA);
 #endif
           validAOADataFound();  // run function to process tone.  because we found a valid AOA value.
           
@@ -355,7 +344,11 @@ void loop() {
           tempBuf[4] = '\0'; //
           ALT = (strtol(tempBuf, NULL, 10) * 0.328) * 10; //convert to long (and from meters to feet)
           validAOADataFound();
-          
+
+#ifdef SHOW_SERIAL_DEBUG    
+          Serial.print("D100 AOA ");
+          Serial.println(AOA);
+#endif
         } else if(inChar == '\n') {
           // if we are at the end of line then reset postion to start looking for a new line.
           inputPos = 0; 
