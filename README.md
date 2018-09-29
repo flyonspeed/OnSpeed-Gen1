@@ -45,6 +45,8 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
 ![schematic](https://github.com/dinglewanker/aoa-tone-efis-serial/blob/master/docs/AOA_Due_schem_5Jun18.png?raw=true)
 
 # Notes
+ * Dynon D100 and D10 only output 115200 baud output.  The Skyview needs to be set to 115200 baud for AHRS output.
+
  * The audio out is designed to plug into the audio panel of your aircraft. Or into the aux audio input on some headsets.
  
  * It may be a good idea to hook a switch inline with the audio out of the board.  This could be useful to turn the device on/off when you don't want to hear a annoying beep in your ear.  Or just using the variable potentiometer to turn down the audio when you don't want to hear it.
@@ -53,7 +55,7 @@ There are 2 different tone frequencies and multiple pulses per second (PPS) hear
  
  * The green led indicates that valid AOA data is being recieved and tones are being played.  If aircraft is not moving or no air is flowing through the pitot this light will not flash.
  
- * For setting up on skyview system need to setup skyview to trasmit(TX) AHRS data to available serial port.  Receiveing does not need to be enabled because this box does not send data back to dynon.  Default is using 9600 baud for serial output.  But this can be changed in source code.
+ * For setting up on skyview system need to setup skyview to trasmit(TX) AHRS data to available serial port.  Receiveing does not need to be enabled because this box does not send data back to dynon.  Default is using 115200 baud for serial output.  But this can be changed in source code.
  
  * A voltage input version of this code can be found here.  https://github.com/dinglewanker/aoa-tone-voltage It takes in a voltage level instead of a serial input.  This could be useful for other types of AOA systems.
  
