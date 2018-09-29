@@ -64,7 +64,7 @@ unsigned char WhichEFIS = D100;   // detect which efis is being read and set sto
 #define HIGH_TONE_PPS_MAX         6.5     // 6.5   
 #define HIGH_TONE_PPS_MIN         1.5     // 1.5
 #define HIGH_TONE_HZ              1600    // freq of high tone
-#define HIGH_TONE2_HZ             1500    // a 2nd high tone that it will cycle between (if defined)
+//#define HIGH_TONE2_HZ             1500    // a 2nd high tone that it will cycle between (if defined)
 #define LOW_TONE_PPS_MAX          8.5
 #define LOW_TONE_PPS_MIN          1.5
 #define LOW_TONE_HZ               400     // freq of low tone
