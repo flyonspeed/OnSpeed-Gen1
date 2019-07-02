@@ -2,7 +2,7 @@
 ////////////////////////////////////////////////////
 // AOA EFIS Serial to audio tone 
 // Supports: Dynon EFIS data using a Arduino Due board
-// Ver 1.5.2
+// Ver 1.6.1
 // Christopher Jones 6/10/2016
 //
 // - Read data in from Serial3 on DUE board. (Dynon is at 115200 baud)
@@ -10,9 +10,10 @@
 // - Audio ouput on pin 2
 // - If no serial data is detected audio tone turns off and LED1 is off
 // - MUTE_AUDIO_UNDER_IAS define is used to only activate audio tones if above a given airspeed
-// 
-// 7/9/2018   - 1.5.1 fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
-// 9/2/2018   - 1.5.2 Atempts to fix hang up issues with skyview data.  Changed start up tones.  added more comments. fix min PPS for low tone.
+//
+// 6/10/2016  - Started
+// 7/09/2018  - 1.5.1 fix for tone PPS between solid tones.  was not calucating the right ratio for the PPS changes.
+// 9/02/2018  - 1.5.2 Atempts to fix hang up issues with skyview data.  Changed start up tones.  added more comments. fix min PPS for low tone.
 // 9/28/2018  - 1.6.0 Fixed Skyview lockup issue.
 // 9/28/2018  - 1.6.1 allow for automatic efis dectection d100 or skyview.
 
